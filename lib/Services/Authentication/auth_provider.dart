@@ -20,5 +20,8 @@ abstract class AuthProvider{
   Future<void> reloadUser();
   bool get isEmailVerified;
 
+  //for google auth provider
+  Future<AuthUser?> logInWithGoogle();
+
 
 }

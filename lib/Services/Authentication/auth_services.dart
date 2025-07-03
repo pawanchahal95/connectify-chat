@@ -41,5 +41,8 @@ class AuthService implements AuthProvider {
   @override
   Future<void> reloadUser() =>provider.reloadUser();
 
+  @override
+  Future<AuthUser?> logInWithGoogle() =>provider.logInWithGoogle();
+
 
 }

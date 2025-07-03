@@ -1,10 +1,10 @@
 import 'package:chatapp/Services/Authentication/auth_exception.dart';
 import 'package:chatapp/Services/Authentication/auth_user.dart';
 import 'package:chatapp/firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart' show  FirebaseAuth, FirebaseAuthException;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseAuthException, GoogleAuthProvider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:chatapp/Services/Authentication/auth_provider.dart';
-
+import 'package:google_sign_in/google_sign_in.dart';
 
 class FirebaseAuthProvider implements AuthProvider {
   @override
@@ -88,7 +88,7 @@ class FirebaseAuthProvider implements AuthProvider {
       throw GenericAuthException();
     }
   }
-
+//logout from the current session
   @override
   Future<void> logOut() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -98,7 +98,7 @@ class FirebaseAuthProvider implements AuthProvider {
       throw UserNotLoggedInAuthException();
     }
   }
-
+//send email verification
   @override
   Future<void> sendEmailVerification() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -108,7 +108,7 @@ class FirebaseAuthProvider implements AuthProvider {
       throw UserNotLoggedInAuthException();
     }
   }
-
+//sending forgot password mail
   @override
   Future<void> forgotPassword({required String email}) async {
     try {
@@ -133,6 +133,7 @@ class FirebaseAuthProvider implements AuthProvider {
     }
   }
 
+//for email verification checking and reloading at times
   @override
   // TODO: implement isEmailVerified
   bool get isEmailVerified{
@@ -144,4 +145,27 @@ class FirebaseAuthProvider implements AuthProvider {
   Future<void> reloadUser() async{
     await FirebaseAuth.instance.currentUser?.reload();
       }
+
+
+      //for google auth provider
+  @override
+  Future<AuthUser?> logInWithGoogle() async {
+    await GoogleSignIn().signOut(); // This clears the last-used account
+    final googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return null;
+
+    final googleAuth = await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+    final user = userCredential.user;
+
+    if (user == null) throw Exception('Google sign-in failed');
+    return AuthUser.fromFirebase(user);
   }
+
+}

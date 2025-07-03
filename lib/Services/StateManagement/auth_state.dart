@@ -20,6 +20,7 @@ class AuthStateRegistering extends AuthState {
 
 class AuthStateLoggedIn extends AuthState {
   final AuthUser user;
+
   const AuthStateLoggedIn(this.user);
 }
 
@@ -40,19 +41,21 @@ class AuthStateForgotPassword extends AuthState {
   });
 }
 
-
 class AuthStateLoggedOut extends AuthState with EquatableMixin {
   final Exception? exception;
   final bool isLoading;
+
   const AuthStateLoggedOut({
     required this.exception,
     required this.isLoading,
   });
+
   @override
-  List<Object?> get props => [exception,isLoading];
+  List<Object?> get props => [exception, isLoading];
 }
 
 class AuthStateLoading extends AuthState {
   const AuthStateLoading();
 }
+
 

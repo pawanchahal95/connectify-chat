@@ -5,7 +5,6 @@ import 'package:chatapp/Utilities/Dialogs/error_dialog.dart';
 import 'package:chatapp/Utilities/Dialogs/loading_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../Services/StateManagement/auth_event.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -21,6 +20,8 @@ class _SignUpPageState extends State<SignUpPage> {
   late final TextEditingController _confirmPassword;
   String? _errorText;
   bool _isError = false;
+
+  CloseDialog? _closeDialogHandle;
 
   @override
   void initState() {
@@ -74,7 +75,8 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
         listener: (context, state) async {
-          if (state is AuthStateRegistering) {
+          if (state is AuthStateRegistering)
+          {
             if (state.exception is WeakPasswordAuthException) {
               await showErrorDialog(context, 'Weak Password');
             } else if (state.exception is EmailAlreadyInUseAuthException) {
@@ -90,6 +92,7 @@ class _SignUpPageState extends State<SignUpPage> {
               await showErrorDialog(context, 'Please check your internet connection');
             }
           }
+
         },
         child: Scaffold(
           body: SingleChildScrollView(
@@ -351,7 +354,9 @@ class _SignUpPageState extends State<SignUpPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            context.read<AuthBloc>().add( const AuthEventLogInWithGoogle());
+                          },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white70,
                               side: const BorderSide(

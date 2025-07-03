@@ -4,7 +4,6 @@ import 'package:chatapp/Services/StateManagement/auth_event.dart';
 import 'package:chatapp/Services/StateManagement/auth_state.dart';
 import 'package:chatapp/Utilities/Dialogs/error_dialog.dart';
 import 'package:chatapp/Utilities/Dialogs/loading_dialog.dart';
-import 'package:chatapp/Views/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 class LoginPage extends StatefulWidget {
@@ -38,8 +37,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(listener: (context, state) async {
+      final closeDialog = _closeDialogHandle;
+      if (state is AuthStateLoggedIn && _closeDialogHandle != null) {
+        _closeDialogHandle!();
+        _closeDialogHandle = null;
+      }
       if (state is AuthStateLoggedOut) {
-        final closeDialog = _closeDialogHandle;
         if (!state.isLoading && closeDialog != null) {
           closeDialog();
           _closeDialogHandle = null;
@@ -242,8 +245,12 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
-                  onPressed: () {},
+                child:
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<AuthBloc>().add(AuthEventLogInWithGoogle());
+                  },
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     elevation: 2,
@@ -276,7 +283,8 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
+                child:
+                ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -323,8 +331,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-    )
-      ,
+    ),
     );
   }
 }

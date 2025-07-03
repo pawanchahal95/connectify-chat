@@ -39,3 +39,9 @@ class AuthEventForgotPassword extends AuthEvent {
 class AuthEventReloadUser extends AuthEvent {
   const AuthEventReloadUser();
 }
+
+//google login
+class AuthEventLogInWithGoogle extends AuthEvent {
+  const AuthEventLogInWithGoogle();
+}
+

@@ -1,0 +1,1 @@
+class CouldNotGetUsersException implements Exception {}
