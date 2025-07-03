@@ -59,5 +59,4 @@ class DefaultFirebaseOptions {
     projectId: 'chatapp-89000',
     storageBucket: 'chatapp-89000.firebasestorage.app',
   );
-
 }
