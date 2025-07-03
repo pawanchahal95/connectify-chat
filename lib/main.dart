@@ -11,7 +11,7 @@ import 'package:chatapp/Views/login_page.dart';
 import 'package:chatapp/Views/old%20views/OldRegisterView.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'firebase_options.dart';
 
 
 void main()  {
