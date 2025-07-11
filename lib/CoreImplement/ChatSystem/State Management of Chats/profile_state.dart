@@ -1,20 +1,24 @@
-import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+import '../Two person room/user_management.dart';
 
-@immutable
-abstract class ProfileState {
-  const ProfileState();
+abstract class ProfileState {}
+
+class ProfileLoading extends ProfileState {}
+
+class ProfileViewMode extends ProfileState {
+  final CloudUser user;
+  ProfileViewMode({required this.user});
 }
-class ProfileStateInitial extends ProfileState{
-  const ProfileStateInitial();
+
+class ProfileEditMode extends ProfileState {
+  final CloudUser? user;
+  ProfileEditMode({this.user});
 }
 
-class ProfileStateLoading  extends ProfileState{}
+class ProfileDeleted extends ProfileState {}
 
-class ProfileStateLoaded  extends ProfileState{}
+class ProfileExist extends ProfileState{}
 
-class ProfileNotFound extends ProfileState {}
-
-class ProfileStateCreated extends ProfileState {}
-
-
+class ProfileError extends ProfileState {
+  final String message;
+  ProfileError({required this.message});
+}
