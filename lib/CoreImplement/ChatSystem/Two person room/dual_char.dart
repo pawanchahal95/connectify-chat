@@ -51,7 +51,8 @@ Future<void> sendMessageToUser({
   required String senderId,
   required String receiverId,
   required String messageText,
-}) async {
+})
+async {
   final room = await findOrCreateChatRoom(senderId, receiverId);
 
   final message = {
@@ -61,6 +62,14 @@ Future<void> sendMessageToUser({
   };
 
   await chatRooms.doc(room.roomId).collection('messages').add(message);
+}
+
+Future<void>deleteChatRoom({required String chatRoomId})async{
+  try{
+    await chatRooms.doc(chatRoomId).delete();
+  }catch(e){
+    throw Exception('Could not delete chat room:$e');
+  }
 }
 
 Stream<List<Map<String, dynamic>>> getMessages(String roomId) {

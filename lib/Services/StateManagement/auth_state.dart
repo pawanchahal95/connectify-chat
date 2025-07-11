@@ -20,7 +20,6 @@ class AuthStateRegistering extends AuthState {
 
 class AuthStateLoggedIn extends AuthState {
   final AuthUser user;
-
   const AuthStateLoggedIn(this.user);
 }
 

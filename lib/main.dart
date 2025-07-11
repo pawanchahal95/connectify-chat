@@ -1,5 +1,4 @@
-import 'package:chatapp/CoreImplement/ChatSystem/Two%20person%20room/list_user.dart';
-import 'package:chatapp/CoreImplement/ChatSystem/Views/chat_screen.dart';
+import 'package:chatapp/CoreImplement/ChatSystem/Views/profile_page.dart';
 import 'package:chatapp/Services/Authentication/firebase_auth_provider.dart';
 import 'package:chatapp/Services/StateManagement/auth_bloc.dart';
 import 'package:chatapp/Services/StateManagement/auth_event.dart';
@@ -29,7 +28,7 @@ void main()  async{
     theme: oceanAuroraTheme,
     home: BlocProvider<AuthBloc>(
       create: (context) => AuthBloc(FirebaseAuthProvider()),
-      child: const AllUsersPage(),
+      child: const Manage(),
     ),
   ));
 }
@@ -49,8 +48,7 @@ class _HomePageState extends State<Manage> {
     return BlocBuilder<AuthBloc,AuthState>(builder: (context, state) {
       if (state is AuthStateLoggedIn) {
         //temporary changes
-        // return const NotesView();
-        return const HomePage();
+        return const FancyProfilePage ( );
         //return const UserManagementPage();
       } else if (state is AuthStateNeedsVerification) {
         return const EmailVerificationPage();
