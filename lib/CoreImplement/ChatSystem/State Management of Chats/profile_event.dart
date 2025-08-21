@@ -5,29 +5,32 @@ abstract class ProfileEvent {
   const ProfileEvent();
 }
 
-class LoadProfile extends ProfileEvent {
-  const LoadProfile();
+class LoadProfileEvent extends ProfileEvent {
+  const LoadProfileEvent();
 }
 
-class EnterEditMode extends ProfileEvent {
-  const EnterEditMode();
+class EnterEditEvent extends ProfileEvent {
+  const EnterEditEvent();
 }
 
-class CancelEditMode extends ProfileEvent {
-  const CancelEditMode();
+class CancelEditEvent extends ProfileEvent {
+  const CancelEditEvent();
+}
+class CreateEvent extends ProfileEvent{
+  const CreateEvent();
 }
 class ProfileViewEvent extends ProfileEvent {
   const ProfileViewEvent();
 }
 
 
-class CreateOrUpdateProfile extends ProfileEvent {
+class CreateOrUpdateProfileEvent extends ProfileEvent {
   final String username;
   final String dialogName;
   final String statusMessage;
   final String phoneNumber;
 
-  const CreateOrUpdateProfile({
+  const CreateOrUpdateProfileEvent({
     required this.username,
     required this.dialogName,
     required this.statusMessage,
@@ -35,6 +38,6 @@ class CreateOrUpdateProfile extends ProfileEvent {
   });
 }
 
-class DeleteProfile extends ProfileEvent {
-  const DeleteProfile();
+class DeleteProfileEvent extends ProfileEvent {
+  const DeleteProfileEvent();
 }

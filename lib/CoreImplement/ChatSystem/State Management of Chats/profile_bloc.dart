@@ -6,73 +6,75 @@ import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
-  ProfileBloc(FirebaseCloudUser cloudService) : super(ProfileLoading()) {
+  ProfileBloc(FirebaseCloudUser cloudService) : super(ProfileLoadingState()) {
 
-    on<LoadProfile>((event, emit) async {
-      emit(ProfileLoading());
+    on<LoadProfileEvent>((event, emit) async {
+      emit(ProfileLoadingState());
       final email = FirebaseAuth.instance.currentUser?.email;
       if (email == null) {
-        emit(ProfileError(message: 'User not logged in.'));
+        emit(ProfileErrorState(message: 'User not logged in.'));
         return;
       }
       try {
         final exists = await cloudService.checkIfUserExist(email: email);
         if (exists) {
-          emit(ProfileExist());
+          emit(ProfileExistState());
         } else {
-          emit(ProfileEditMode(user: null));
+          emit(ProfileCreateState(user: null));
         }
       } catch (e) {
-        emit(ProfileError(message: 'Failed to load profile: $e'));
+        emit(ProfileErrorState(message: 'Failed to load profile: $e'));
       }
     });
 
-    on<EnterEditMode>((event, emit) {
-      if (state is ProfileViewMode) {
-        final user = (state as ProfileViewMode).user;
-        emit(ProfileEditMode(user: user));
+    on<EnterEditEvent>((event, emit) {
+      if (state is ProfileViewState) {
+        final user = (state as ProfileViewState).user;
+        emit(ProfileEditState(user: user));
       }
     });
 
-    on<CancelEditMode>((event, emit) {
-      if (state is ProfileEditMode) {
-        final user = (state as ProfileEditMode).user;
+    on<CancelEditEvent>((event, emit) {
+      if (state is ProfileEditState) {
+        final user = (state as ProfileEditState).user;
         if (user != null) {
-          emit(ProfileViewMode(user: user));
+          emit(ProfileViewState(user: user));
         } else {
-          emit(ProfileEditMode(user: null)); // Still in edit mode
+          emit(ProfileEditState(user: null)); // Still in create  mode
         }
       }
     });
 
+
+
     on<ProfileViewEvent>((event,emit)async {
-      emit(ProfileLoading());
+      emit(ProfileLoadingState());
       final email = FirebaseAuth.instance.currentUser?.email;
       if (email == null) {
-        emit(ProfileError(message: 'User not logged in.'));
+        emit(ProfileErrorState(message: 'User not logged in.'));
         return;
       }
       try {
         final exists = await cloudService.checkIfUserExist(email: email);
         if (exists) {
           final user = await cloudService.getUser(email: email);
-          emit(ProfileViewMode(user: user));
+          emit(ProfileViewState(user: user));
 
         } else {
-          emit(ProfileEditMode(user: null));
+          emit(ProfileCreateState(user: null));
         }
       } catch (e) {
-        emit(ProfileError(message: 'Failed to load profile: $e'));
+        emit(ProfileErrorState(message: 'Failed to load profile: $e'));
       }
     });
 
-    on<CreateOrUpdateProfile>((event, emit) async {
-      emit(ProfileLoading());
+    on<CreateOrUpdateProfileEvent>((event, emit) async {
+      emit(ProfileLoadingState());
       final email = FirebaseAuth.instance.currentUser?.email;
       final uid = FirebaseAuth.instance.currentUser?.uid;
 
       if (email == null || uid == null) {
-        emit(ProfileError(message: 'User not authenticated.'));
+        emit(ProfileErrorState(message: 'User not authenticated.'));
         return;
       }
 
@@ -98,25 +100,24 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         }
 
         final updatedUser = await cloudService.getUser(email: email);
-        emit(ProfileExist());
+        emit(ProfileExistState());
       } catch (e) {
-        emit(ProfileError(message: 'Failed to save profile: $e'));
+        emit(ProfileErrorState(message: 'Failed to save profile: $e'));
       }
     });
 
-    on<DeleteProfile>((event, emit) async {
-      emit(ProfileLoading());
+    on<DeleteProfileEvent>((event, emit) async {
+      emit(ProfileLoadingState());
       final email = FirebaseAuth.instance.currentUser?.email;
       if (email == null) {
-        emit(ProfileError(message: 'User not authenticated.'));
+        emit(ProfileErrorState(message: 'User not authenticated.'));
         return;
       }
-
       try {
         await cloudService.deleteUserByEmail(email: email);
-        emit(ProfileEditMode(user: null)); // Go back to empty profile
+        emit(ProfileCreateState(user: null)); // Go back to empty profile
       } catch (e) {
-        emit(ProfileError(message: 'Error deleting profile: $e'));
+        emit(ProfileErrorState(message: 'Error deleting profile: $e'));
       }
     });
   }

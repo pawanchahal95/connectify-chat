@@ -1,12 +1,16 @@
-
 import 'package:chatapp/CoreImplement/ChatSystem/State%20Management%20of%20Chats/profile_bloc.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/State%20Management%20of%20Chats/profile_event.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/State%20Management%20of%20Chats/profile_state.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/Views/homePage.dart';
-import 'package:chatapp/CoreImplement/ChatSystem/Views/profile_page_view.dart';
+import 'package:chatapp/CoreImplement/ChatSystem/Views/profile%20pages/profile_page_edit.dart';
+import 'package:chatapp/CoreImplement/ChatSystem/Views/profile%20pages/profile_page_error.dart';
+import 'package:chatapp/CoreImplement/ChatSystem/Views/profile%20pages/profile_page_view.dart';
+import 'package:chatapp/Views/loading_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../Two person room/user_management.dart';
+import 'profile pages/profile_page_create.dart';
 
 class FancyProfilePage extends StatelessWidget {
   const FancyProfilePage({super.key});
@@ -31,19 +35,23 @@ class FancyProfileView extends StatefulWidget {
 class _FancyProfileViewState extends State<FancyProfileView> {
   @override
   Widget build(BuildContext context) {
-    context.read<ProfileBloc>().add(const LoadProfile());
+    context.read<ProfileBloc>().add(const LoadProfileEvent());
 
     return BlocBuilder<ProfileBloc, ProfileState>(builder: (context, state) {
-      if (state is ProfileLoading) {
-      return  const  ProfileLoadingPage();
-      } else if (state is ProfileDeleted) {
-        return  const  ProfilePageEdit();
-      } else if (state is ProfileEditMode) {
-        return  const  ProfilePageEdit();
-      } else if(state is ProfileViewMode){
+      if (state is ProfileLoadingState) {
+        return const ElegantLoadingScreen();
+      } else if (state is ProfileDeletedState) {
+        return const ProfilePageCreate();
+      } else if (state is ProfileEditState) {
+        return const ProfilePageEdit();
+      } else if (state is ProfileCreateState) {
+        return const ProfilePageCreate();
+      } else if (state is ProfileViewState) {
         return const ProfilePageView();
-      } else if (state is ProfileExist) {
+      } else if (state is ProfileExistState) {
         return const HomePage();
+      } else if (state is ProfileErrorState) {
+        return const ProfileErrorPage();
       } else {
         return const CircularProgressIndicator();
       }

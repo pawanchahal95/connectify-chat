@@ -49,6 +49,20 @@ class CloudUser {
         pushToken = snapshot.data()['pushToken'],
         lastSeen = (snapshot.data()['lastSeen'] as Timestamp?)?.toDate();
 
+  CloudUser.fromDocumentSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot)
+      : documentId = snapshot.id,
+        email = snapshot.data()?['email'] ?? 'unknown@email.com',
+        userDialog = snapshot.data()?['userDialog'] ?? '',
+        userId = snapshot.data()?['userId'] ?? '',
+        userImage = snapshot.data()?['userImage'],
+        userName = snapshot.data()?['userName'] ?? '',
+        statusMessage = snapshot.data()?['statusMessage'],
+        phoneNumber = snapshot.data()?['phoneNumber'],
+        isOnline = snapshot.data()?['isOnline'],
+        typingTo = snapshot.data()?['typingTo'],
+        pushToken = snapshot.data()?['pushToken'],
+        lastSeen = (snapshot.data()?['lastSeen'] as Timestamp?)?.toDate();
+
   static get emailField => null;
 }
 
@@ -95,8 +109,10 @@ class FirebaseCloudUser {
       final document = await users.add(userData);
 
       final fetchedUser = await document.get();
-      return CloudUser.fromSnapshot(
-          fetchedUser as QueryDocumentSnapshot<Map<String, dynamic>>);
+      /*return CloudUser.fromSnapshot(
+          fetchedUser as QueryDocumentSnapshot<Map<String, dynamic>>);*/
+      return CloudUser.fromDocumentSnapshot(fetchedUser); // ✅
+
     } catch (e) {
       throw Exception('Could not create user: $e');
     }

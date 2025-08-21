@@ -2,23 +2,27 @@ import '../Two person room/user_management.dart';
 
 abstract class ProfileState {}
 
-class ProfileLoading extends ProfileState {}
+class ProfileLoadingState extends ProfileState {}
 
-class ProfileViewMode extends ProfileState {
+class ProfileViewState extends ProfileState {
   final CloudUser user;
-  ProfileViewMode({required this.user});
+  ProfileViewState({required this.user});
 }
 
-class ProfileEditMode extends ProfileState {
+class ProfileEditState extends ProfileState {
   final CloudUser? user;
-  ProfileEditMode({this.user});
+  ProfileEditState({this.user});
 }
+//just to create the profile
+class ProfileCreateState extends ProfileState {
+  final CloudUser? user;
+  ProfileCreateState({this.user});
+}
+class ProfileDeletedState extends ProfileState {}
 
-class ProfileDeleted extends ProfileState {}
+class ProfileExistState extends ProfileState{}
 
-class ProfileExist extends ProfileState{}
-
-class ProfileError extends ProfileState {
+class ProfileErrorState extends ProfileState {
   final String message;
-  ProfileError({required this.message});
+  ProfileErrorState({required this.message});
 }
