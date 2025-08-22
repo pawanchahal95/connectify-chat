@@ -1,6 +1,7 @@
 import 'package:chatapp/Services/StateManagement/auth_bloc.dart';
 import 'package:chatapp/Services/StateManagement/auth_event.dart';
 import 'package:chatapp/Utilities/Dialogs/logout_dialog.dart';
+import 'package:chatapp/Utilities/Dialogs/error_dialog.dart'; // <-- import your error dialog
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../State Management of Chats/profile_bloc.dart';
@@ -13,6 +14,7 @@ class ProfilePageCreate extends StatefulWidget {
   @override
   State<ProfilePageCreate> createState() => _ProfilePageCreateState();
 }
+
 class _ProfilePageCreateState extends State<ProfilePageCreate> {
   late final TextEditingController _usernameController;
   late final TextEditingController _dialogController;
@@ -41,32 +43,59 @@ class _ProfilePageCreateState extends State<ProfilePageCreate> {
     super.dispose();
   }
 
+  void _onCreateProfilePressed() {
+    final username = _usernameController.text.trim();
+    final dialog = _dialogController.text.trim();
+    final status = _statusController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    if (username.isEmpty || dialog.isEmpty || status.isEmpty || phone.isEmpty) {
+      showErrorDialog(context, "All fields are required. Please fill them in.");
+      return;
+    }
+
+    context.read<ProfileBloc>().add(
+      CreateOrUpdateProfileEvent(
+        username: username,
+        dialogName: dialog,
+        phoneNumber: phone,
+        statusMessage: status,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.colorScheme.surfaceVariant,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.redAccent,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         title: const Text(
           'Create Profile',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
           PopupMenuButton<String>(
+            iconColor: theme.colorScheme.onPrimary,
             onSelected: (value) async {
               if (value == 'Logout') {
                 final shouldLogout = await showLogOutDialog(context);
                 if (shouldLogout) {
                   context.read<AuthBloc>().add(AuthEventLogOut());
-
                 }
               }
             },
             itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'Logout',
-                child: Text('Logout User'),
+                child: Text(
+                  'Logout User',
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                ),
               ),
             ],
           ),
@@ -92,16 +121,19 @@ class _ProfilePageCreateState extends State<ProfilePageCreate> {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: Colors.redAccent.withOpacity(0.2),
-                      child: Icon(Icons.person, size: 60, color: Colors.redAccent),
+                      backgroundColor:
+                      theme.colorScheme.primary.withOpacity(0.2),
+                      child: Icon(
+                        Icons.person,
+                        size: 60,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       "Create your profile",
-                      style: TextStyle(
-                        fontSize: 20,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -120,22 +152,26 @@ class _ProfilePageCreateState extends State<ProfilePageCreate> {
                               controller: _usernameController,
                               label: "Username",
                               icon: Icons.person,
+                              theme: theme,
                             ),
                             _buildTextField(
                               controller: _dialogController,
                               label: "Dialog Name",
                               icon: Icons.chat,
+                              theme: theme,
                             ),
                             _buildTextField(
                               controller: _statusController,
                               label: "Status Message",
                               icon: Icons.info,
+                              theme: theme,
                             ),
                             _buildTextField(
                               controller: _phoneController,
                               label: "Phone Number",
                               icon: Icons.phone,
                               keyboardType: TextInputType.phone,
+                              theme: theme,
                             ),
                           ],
                         ),
@@ -147,26 +183,21 @@ class _ProfilePageCreateState extends State<ProfilePageCreate> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 3,
                         ),
-                        onPressed: () {
-                          context.read<ProfileBloc>().add(
-                            CreateOrUpdateProfileEvent(
-                              username: _usernameController.text.trim(),
-                              dialogName: _dialogController.text.trim(),
-                              phoneNumber: _phoneController.text.trim(),
-                              statusMessage: _statusController.text.trim(),
-                            ),
-                          );
-                        },
+                        onPressed: _onCreateProfilePressed,
                         child: const Text(
                           'Create Profile',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -186,6 +217,7 @@ class _ProfilePageCreateState extends State<ProfilePageCreate> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    required ThemeData theme,
     TextInputType? keyboardType,
   }) {
     return Padding(
@@ -194,16 +226,15 @@ class _ProfilePageCreateState extends State<ProfilePageCreate> {
         controller: controller,
         keyboardType: keyboardType,
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.redAccent),
+          prefixIcon: Icon(icon, color: theme.colorScheme.primary),
           labelText: label,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: theme.colorScheme.surface,
         ),
       ),
     );
   }
 }
-

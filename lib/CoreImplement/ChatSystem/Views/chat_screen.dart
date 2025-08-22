@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:chatapp/CoreImplement/ChatSystem/Two person room/dual_char.dart';
+import 'package:chatapp/CoreImplement/ChatSystem/Two person room/dual_chat.dart';
 class ChatScreen extends StatefulWidget {
   final String senderId;
   final String receiverId;

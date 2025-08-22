@@ -1,5 +1,51 @@
 import 'package:flutter/material.dart';
 
+//default
+final ThemeData profileTheme = ThemeData(
+  brightness: Brightness.light,
+  primaryColor: Colors.green.shade600, // WeChat-like green
+  scaffoldBackgroundColor: Colors.white,
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.white,
+    elevation: 0,
+    iconTheme: IconThemeData(color: Colors.black),
+    titleTextStyle: TextStyle(
+      color: Colors.black,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.black, fontSize: 16),
+    bodyMedium: TextStyle(color: Colors.black87, fontSize: 14),
+    bodySmall: TextStyle(color: Colors.grey, fontSize: 12),
+  ),
+  iconTheme: const IconThemeData(color: Colors.black87, size: 22),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.green, // button color
+      foregroundColor: Colors.white, // text/icon color
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      textStyle: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: Colors.grey.shade100,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    hintStyle: TextStyle(color: Colors.grey.shade600),
+  ),
+);
+
 final ThemeData elegantTheme = ThemeData(
   colorScheme: ColorScheme.light(
     primary: Color(0xFF0077FF), // Electric Blue

@@ -25,7 +25,7 @@ void main()  async{
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     title: 'Flutter Demo',
-    theme: oceanAuroraTheme,
+    theme: sunsetFusionTheme,
     home: BlocProvider<AuthBloc>(
       create: (context) => AuthBloc(FirebaseAuthProvider()),
       child: const Manage(),
