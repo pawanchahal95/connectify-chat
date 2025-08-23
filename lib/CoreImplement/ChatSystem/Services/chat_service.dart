@@ -104,6 +104,18 @@ class ChatService {
     });
   }
 
+  Future<void> deleteChatRoomIfEmpty(String chatRoomId) async {
+    final messagesSnapshot = await _firestore
+        .collection('chatRooms')
+        .doc(chatRoomId)
+        .collection('messages')
+        .get();
+
+    if (messagesSnapshot.docs.isEmpty) {
+      await _firestore.collection('chatRooms').doc(chatRoomId).delete();
+    }
+  }
+
   Future<void> editMessage(String chatRoomId, String messageId, String newText) async {
     final messageRef = _firestore
         .collection('chatRooms')

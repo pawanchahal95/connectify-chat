@@ -26,7 +26,10 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Map<String, String> userMap = {}; // UID -> userName
+  Map<String, String> userMap = {}; // UID -> username
+  Set<String> selectedMessageIds = {}; // for selection
+  bool selectionMode = false;
+  ChatMessage? _editingMessage;
 
   @override
   void initState() {
@@ -79,11 +82,26 @@ class _ChatPageState extends State<ChatPage> {
     if (text.isEmpty) return;
 
     try {
-      await _chatService.sendMessage(widget.chatRoomId, widget.currentUserId, text);
+      if (_editingMessage != null) {
+        await _chatService.editMessage(widget.chatRoomId, _editingMessage!.id!, text);
+        _editingMessage = null;
+      } else {
+        await _chatService.sendMessage(widget.chatRoomId, widget.currentUserId, text);
+      }
       _controller.clear();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to send: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed: $e")));
     }
+  }
+
+  void _deleteSelectedMessages() async {
+    for (var msgId in selectedMessageIds) {
+      await _chatService.deleteMessage(widget.chatRoomId, msgId);
+    }
+    setState(() {
+      selectionMode = false;
+      selectedMessageIds.clear();
+    });
   }
 
   @override
@@ -93,7 +111,9 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: selectionMode
+            ? Text("${selectedMessageIds.length} selected")
+            : Row(
           children: [
             CircleAvatar(
               radius: 16,
@@ -107,6 +127,45 @@ class _ChatPageState extends State<ChatPage> {
             Text(otherUserName),
           ],
         ),
+        actions: selectionMode
+            ? [
+          if (selectedMessageIds.length == 1)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                final msgId = selectedMessageIds.first;
+                _firestore
+                    .collection('chatRooms')
+                    .doc(widget.chatRoomId)
+                    .collection('messages')
+                    .doc(msgId)
+                    .get()
+                    .then((doc) {
+                  final msg = ChatMessage.fromMap(doc.data()!);
+                  _controller.text = msg.text;
+                  _editingMessage = msg;
+                  setState(() {
+                    selectionMode = false;
+                    selectedMessageIds.clear();
+                  });
+                });
+              },
+            ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _deleteSelectedMessages,
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              setState(() {
+                selectionMode = false;
+                selectedMessageIds.clear();
+              });
+            },
+          ),
+        ]
+            : null,
       ),
       body: Column(
         children: [
@@ -135,10 +194,8 @@ class _ChatPageState extends State<ChatPage> {
                     final msg = messages[index];
                     final isMe = msg.senderId == widget.currentUserId;
                     final senderName = getDisplayName(msg.senderId);
-
                     final msgTime = msg.timestamp?.toDate() ?? DateTime.now();
 
-                    // Determine if we need a date header
                     bool showDateHeader = true;
                     if (index < messages.length - 1) {
                       final prevTime = messages[index + 1].timestamp?.toDate();
@@ -150,90 +207,107 @@ class _ChatPageState extends State<ChatPage> {
                       }
                     }
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (showDateHeader)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    formatDateHeader(msgTime),
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                    return GestureDetector(
+                      onLongPress: () {
+                        setState(() {
+                          selectionMode = true;
+                          selectedMessageIds.add(msg.id!);
+                        });
+                      },
+                      onTap: () {
+                        if (selectionMode) {
+                          setState(() {
+                            if (selectedMessageIds.contains(msg.id)) {
+                              selectedMessageIds.remove(msg.id);
+                              if (selectedMessageIds.isEmpty) selectionMode = false;
+                            } else {
+                              selectedMessageIds.add(msg.id!);
+                            }
+                          });
+                        }
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (showDateHeader)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  constraints: BoxConstraints(
+                                      maxWidth: MediaQuery.of(context).size.width * 0.8),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      formatDateHeader(msgTime),
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        Align(
-                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (!isMe)
-                                CircleAvatar(
-                                  radius: 16,
-                                  backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-                                  child: Text(
-                                    getInitials(senderName),
-                                    style: TextStyle(
-                                        color: theme.colorScheme.primary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              if (!isMe) const SizedBox(width: 6),
-                              Container(
-                                constraints:
-                                BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                decoration: BoxDecoration(
-                                  color: isMe
-                                      ? theme.colorScheme.primary.withOpacity(0.15)
-                                      : theme.colorScheme.surfaceVariant.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      senderName,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                          Align(
+                            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.7),
+                              decoration: BoxDecoration(
+                                color: selectedMessageIds.contains(msg.id)
+                                    ? Colors.blue.withOpacity(0.2)
+                                    : isMe
+                                    ? theme.colorScheme.primary.withOpacity(0.15)
+                                    : theme.colorScheme.surfaceVariant.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment:
+                                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                children: [
+                                  if (!isMe)
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 16,
+                                          backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                                          child: Text(
+                                            getInitials(senderName),
+                                            style: TextStyle(
+                                                color: theme.colorScheme.primary,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          senderName,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      msg.text,
-                                      style: TextStyle(color: theme.colorScheme.onSurface),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      formatTime(msgTime),
+                                  const SizedBox(height: 2),
+                                  Text(msg.text, style: TextStyle(color: theme.colorScheme.onSurface)),
+                                  const SizedBox(height: 2),
+                                  Text(formatTime(msgTime),
                                       style: TextStyle(
                                           fontSize: 10,
-                                          color: theme.colorScheme.onSurface.withOpacity(0.5)),
-                                    ),
-                                  ],
-                                ),
+                                          color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 );
