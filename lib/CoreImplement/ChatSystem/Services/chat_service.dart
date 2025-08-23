@@ -6,16 +6,19 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Create a chat room between two users
-  Future<String> createChatRoom(String userId1, String userId2) async {
-    List<String> participants = [userId1, userId2]..sort();
+  Future<String> createOrGetChatRoom(String currentUserId, String otherUserId) async {
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    // Always keep a consistent roomId (so both users land in the same room)
+    List<String> participants = [currentUserId, otherUserId]..sort();
     String chatRoomId = participants.join('_');
 
-    DocumentReference roomRef =
-    _firestore.collection('chatRooms').doc(chatRoomId);
+    DocumentReference roomRef = _firestore.collection('chatRooms').doc(chatRoomId);
 
     final roomSnapshot = await roomRef.get();
 
     if (!roomSnapshot.exists) {
+      // Create new chat room
       ChatRoom room = ChatRoom(
         chatRoomId: chatRoomId,
         participants: participants,
