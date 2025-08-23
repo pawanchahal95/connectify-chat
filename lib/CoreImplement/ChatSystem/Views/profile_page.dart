@@ -2,7 +2,6 @@ import 'package:chatapp/CoreImplement/ChatSystem/Services/chat_list_page.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/State%20Management%20of%20Chats/profile_bloc.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/State%20Management%20of%20Chats/profile_event.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/State%20Management%20of%20Chats/profile_state.dart';
-import 'package:chatapp/CoreImplement/ChatSystem/Views/chat_screen.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/Views/homePage.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/Views/list_user.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/Views/profile%20pages/profile_page_edit.dart';
