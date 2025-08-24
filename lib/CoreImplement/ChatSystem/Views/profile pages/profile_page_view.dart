@@ -19,11 +19,22 @@ class _ProfilePageViewState extends State<ProfilePageView> {
     return Scaffold(
       backgroundColor: theme.colorScheme.background, // 👈 from theme
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary, // 👈 from theme
+        backgroundColor: theme.colorScheme.primary,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back, // use backward style if you prefer Icons.arrow_back_ios
+            color: theme.colorScheme.onPrimary,
+          ),
+          onPressed: () {
+            // Trigger navigation or bloc event
+            context.read<ProfileBloc>().add(const ProfileExistEvent());
+          },
+          tooltip: "Go to complete profile",
+        ),
         title: Text(
           'Profile',
           style: TextStyle(
-            color: theme.colorScheme.onPrimary, // 👈 ensures contrast
+            color: theme.colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -50,7 +61,8 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                     // Profile avatar
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                      backgroundColor:
+                          theme.colorScheme.primary.withOpacity(0.2),
                       child: Text(
                         user.userName.isNotEmpty
                             ? user.userName[0].toUpperCase()
@@ -74,16 +86,20 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
-                            _buildInfoRow(theme, Icons.person, "Username", user.userName),
+                            _buildInfoRow(
+                                theme, Icons.person, "Username", user.userName),
                             const Divider(),
-                            _buildInfoRow(theme, Icons.chat_bubble, "Dialog", user.userDialog),
+                            _buildInfoRow(theme, Icons.chat_bubble, "Dialog",
+                                user.userDialog),
                             const Divider(),
-                            _buildInfoRow(theme, Icons.email, "Email", user.email),
+                            _buildInfoRow(
+                                theme, Icons.email, "Email", user.email),
                             const Divider(),
                             _buildInfoRow(theme, Icons.info_outline, "Status",
                                 user.statusMessage ?? "I am new to WeChat"),
                             const Divider(),
-                            _buildInfoRow(theme, Icons.phone, "Phone", user.phoneNumber ?? "N/A"),
+                            _buildInfoRow(theme, Icons.phone, "Phone",
+                                user.phoneNumber ?? "N/A"),
                           ],
                         ),
                       ),
@@ -95,9 +111,12 @@ class _ProfilePageViewState extends State<ProfilePageView> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          context.read<ProfileBloc>().add(const EnterEditEvent());
+                          context
+                              .read<ProfileBloc>()
+                              .add(const EnterEditEvent());
                         },
-                        icon: Icon(Icons.edit, color: theme.colorScheme.onPrimary),
+                        icon: Icon(Icons.edit,
+                            color: theme.colorScheme.onPrimary),
                         label: Text(
                           "Edit Profile",
                           style: TextStyle(
@@ -132,11 +151,11 @@ class _ProfilePageViewState extends State<ProfilePageView> {
   }
 
   Widget _buildInfoRow(
-      ThemeData theme,
-      IconData icon,
-      String label,
-      String value,
-      ) {
+    ThemeData theme,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

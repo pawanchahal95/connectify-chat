@@ -26,8 +26,8 @@ class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Map<String, String> userMap = {}; // UID -> username
-  Set<String> selectedMessageIds = {}; // for selection
+  Map<String, String> userMap = {};
+  Set<String> selectedMessageIds = {};
   bool selectionMode = false;
   ChatMessage? _editingMessage;
 
@@ -46,9 +46,7 @@ class _ChatPageState extends State<ChatPage> {
         final name = data['userName'] ?? uid;
         map[uid] = name;
       }
-      setState(() {
-        userMap = map;
-      });
+      setState(() => userMap = map);
     });
   }
 
@@ -66,15 +64,13 @@ class _ChatPageState extends State<ChatPage> {
   String formatDateHeader(DateTime date) {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));
-    if (date.year == now.year && date.month == now.month && date.day == now.day) {
-      return "Today";
-    } else if (date.year == yesterday.year &&
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) return "Today";
+    if (date.year == yesterday.year &&
         date.month == yesterday.month &&
-        date.day == yesterday.day) {
-      return "Yesterday";
-    } else {
-      return DateFormat('dd/MM/yyyy').format(date);
-    }
+        date.day == yesterday.day) return "Yesterday";
+    return DateFormat('dd/MM/yyyy').format(date);
   }
 
   void _sendMessage() async {
@@ -89,8 +85,21 @@ class _ChatPageState extends State<ChatPage> {
         await _chatService.sendMessage(widget.chatRoomId, widget.currentUserId, text);
       }
       _controller.clear();
+      _scrollToBottom();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed: $e")),
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -109,54 +118,80 @@ class _ChatPageState extends State<ChatPage> {
     final theme = Theme.of(context);
     final otherUserName = getDisplayName(widget.otherUserId);
 
+    // Gradient for AppBar and Send button
+    final gradientColors = [
+      theme.colorScheme.primary,
+      theme.colorScheme.primaryContainer,
+    ];
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
+        elevation: 2,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         title: selectionMode
             ? Text("${selectedMessageIds.length} selected")
             : Row(
           children: [
             CircleAvatar(
-              radius: 16,
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+              radius: 18,
+              backgroundColor: theme.colorScheme.primaryContainer,
               child: Text(
                 getInitials(otherUserName),
-                style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(width: 8),
-            Text(otherUserName),
+            Expanded(
+              child: Text(
+                otherUserName,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: selectionMode
             ? [
           if (selectedMessageIds.length == 1)
             IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
+              icon: Icon(Icons.edit, color: theme.colorScheme.onPrimary),
+              onPressed: () async {
                 final msgId = selectedMessageIds.first;
-                _firestore
+                final doc = await _firestore
                     .collection('chatRooms')
                     .doc(widget.chatRoomId)
                     .collection('messages')
                     .doc(msgId)
-                    .get()
-                    .then((doc) {
-                  final msg = ChatMessage.fromMap(doc.data()!);
-                  _controller.text = msg.text;
-                  _editingMessage = msg;
-                  setState(() {
-                    selectionMode = false;
-                    selectedMessageIds.clear();
-                  });
+                    .get();
+                final msg = ChatMessage.fromMap(doc.data()!);
+                _controller.text = msg.text;
+                _editingMessage = msg;
+                setState(() {
+                  selectionMode = false;
+                  selectedMessageIds.clear();
                 });
               },
             ),
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: Icon(Icons.delete, color: theme.colorScheme.onPrimary),
             onPressed: _deleteSelectedMessages,
           ),
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: Icon(Icons.close, color: theme.colorScheme.onPrimary),
             onPressed: () {
               setState(() {
                 selectionMode = false;
@@ -174,15 +209,19 @@ class _ChatPageState extends State<ChatPage> {
               stream: _chatService.getMessages(widget.chatRoomId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                      child: CircularProgressIndicator(color: theme.colorScheme.primary));
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
+                  return Center(
+                      child: Text("Error: ${snapshot.error}", style: theme.textTheme.bodyMedium));
                 }
 
                 final messages = snapshot.data ?? [];
                 if (messages.isEmpty) {
-                  return const Center(child: Text("No messages yet"));
+                  return Center(
+                    child: Text("No messages yet", style: theme.textTheme.bodyMedium),
+                  );
                 }
 
                 return ListView.builder(
@@ -206,6 +245,12 @@ class _ChatPageState extends State<ChatPage> {
                         showDateHeader = false;
                       }
                     }
+
+                    final bubbleColor = selectedMessageIds.contains(msg.id)
+                        ? theme.colorScheme.secondaryContainer.withOpacity(0.3)
+                        : isMe
+                        ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                        : theme.colorScheme.surfaceVariant.withOpacity(0.8);
 
                     return GestureDetector(
                       onLongPress: () {
@@ -234,9 +279,11 @@ class _ChatPageState extends State<ChatPage> {
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Center(
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 4),
                                   constraints: BoxConstraints(
-                                      maxWidth: MediaQuery.of(context).size.width * 0.8),
+                                      maxWidth:
+                                      MediaQuery.of(context).size.width * 0.8),
                                   decoration: BoxDecoration(
                                     color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
                                     borderRadius: BorderRadius.circular(12),
@@ -245,9 +292,9 @@ class _ChatPageState extends State<ChatPage> {
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       formatDateHeader(msgTime),
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -257,51 +304,85 @@ class _ChatPageState extends State<ChatPage> {
                             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                             child: Container(
                               margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 12),
                               constraints: BoxConstraints(
-                                  maxWidth: MediaQuery.of(context).size.width * 0.7),
+                                  maxWidth:
+                                  MediaQuery.of(context).size.width * 0.7),
                               decoration: BoxDecoration(
-                                color: selectedMessageIds.contains(msg.id)
-                                    ? Colors.blue.withOpacity(0.2)
-                                    : isMe
-                                    ? theme.colorScheme.primary.withOpacity(0.15)
-                                    : theme.colorScheme.surfaceVariant.withOpacity(0.8),
+                                gradient: isMe
+                                    ? LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.primaryContainer,
+                                    theme.colorScheme.primary
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                                    : LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.surfaceVariant,
+                                    theme.colorScheme.surface
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Column(
-                                crossAxisAlignment:
-                                isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                crossAxisAlignment: isMe
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
                                 children: [
                                   if (!isMe)
                                     Row(
                                       children: [
                                         CircleAvatar(
                                           radius: 16,
-                                          backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                                          backgroundColor:
+                                          theme.colorScheme.primaryContainer,
                                           child: Text(
                                             getInitials(senderName),
                                             style: TextStyle(
-                                                color: theme.colorScheme.primary,
+                                                color:
+                                                theme.colorScheme.onPrimaryContainer,
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold),
                                           ),
                                         ),
                                         const SizedBox(width: 6),
-                                        Text(
-                                          senderName,
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                                        Flexible(
+                                          child: Text(
+                                            senderName,
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.colorScheme.onSurface
+                                                    .withOpacity(0.7)),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   const SizedBox(height: 2),
-                                  Text(msg.text, style: TextStyle(color: theme.colorScheme.onSurface)),
+                                  Text(
+                                    msg.text,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface),
+                                  ),
                                   const SizedBox(height: 2),
-                                  Text(formatTime(msgTime),
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          color: theme.colorScheme.onSurface.withOpacity(0.5))),
+                                  Text(
+                                    formatTime(msgTime),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface
+                                            .withOpacity(0.5)),
+                                  ),
                                 ],
                               ),
                             ),
@@ -325,19 +406,40 @@ class _ChatPageState extends State<ChatPage> {
                       controller: _controller,
                       minLines: 1,
                       maxLines: 5,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onBackground,
+                      ),
                       decoration: InputDecoration(
                         hintText: "Type a message...",
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onBackground.withOpacity(0.5),
+                        ),
+                        contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        filled: true,
+                        fillColor: theme.colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _sendMessage,
-                    icon: const Icon(Icons.send),
-                    color: theme.colorScheme.primary,
-                    tooltip: "Send",
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: gradientColors,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: _sendMessage,
+                      icon: Icon(Icons.send, color: theme.colorScheme.onPrimary),
+                      tooltip: "Send",
+                    ),
                   ),
                 ],
               ),

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatMessage {
-  final String id; // Firestore doc ID
+  final String? id; // Firestore doc ID
   final String senderId;
   final String text;
   final Timestamp timestamp;

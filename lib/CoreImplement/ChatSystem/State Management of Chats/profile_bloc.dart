@@ -120,5 +120,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileErrorState(message: 'Error deleting profile: $e'));
       }
     });
+    on<ProfileExistEvent>((event, emit) async {
+      if (state is ProfileViewState) {
+        emit(ProfileExistState());
+      }
+    });
+
   }
 }

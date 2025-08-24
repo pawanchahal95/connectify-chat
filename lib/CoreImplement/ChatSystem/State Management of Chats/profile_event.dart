@@ -41,3 +41,6 @@ class CreateOrUpdateProfileEvent extends ProfileEvent {
 class DeleteProfileEvent extends ProfileEvent {
   const DeleteProfileEvent();
 }
+class ProfileExistEvent extends ProfileEvent{
+  const ProfileExistEvent();
+}

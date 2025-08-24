@@ -3,7 +3,8 @@ import 'package:chatapp/Services/Authentication/firebase_auth_provider.dart';
 import 'package:chatapp/Services/StateManagement/auth_bloc.dart';
 import 'package:chatapp/Services/StateManagement/auth_event.dart';
 import 'package:chatapp/Services/StateManagement/auth_state.dart';
-import 'package:chatapp/Themes/forget_password_view_themes.dart';
+import 'package:chatapp/Themes/forget_password_view_themes.dart'; // all your theme imports
+import 'package:chatapp/Themes/theme_notifier.dart';
 import 'package:chatapp/Views/emai_verification_page.dart';
 import 'package:chatapp/Views/forgot_password.dart';
 import 'package:chatapp/Views/home_page.dart';
@@ -13,58 +14,68 @@ import 'package:chatapp/Views/register_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart'; // <-- import provider
 import 'firebase_options.dart';
 
-
-void main()  async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'Flutter Demo',
-    theme: sunsetFusionTheme,
-    home: BlocProvider<AuthBloc>(
-      create: (context) => AuthBloc(FirebaseAuthProvider()),
-      child: const Manage(),
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(), // initial theme
+      child: const MyApp(),
     ),
-  ));
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Demo',
+      theme: themeNotifier.currentTheme, // <-- dynamic theme
+      home: BlocProvider<AuthBloc>(
+        create: (context) => AuthBloc(FirebaseAuthProvider()),
+        child: const Manage(),
+      ),
+    );
+  }
 }
 
 class Manage extends StatefulWidget {
   const Manage({super.key});
 
   @override
-  State<Manage> createState() => _HomePageState();
+  State<Manage> createState() => _ManageState();
 }
 
-class _HomePageState extends State<Manage> {
+class _ManageState extends State<Manage> {
   @override
   Widget build(BuildContext context) {
     context.read<AuthBloc>().add(const AuthEventInitialize());
 
-    return BlocBuilder<AuthBloc,AuthState>(builder: (context, state) {
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
       if (state is AuthStateLoggedIn) {
-        //temporary changes
-        return const FancyProfilePage ( );
-        //return const UserManagementPage();
+        return const FancyProfilePage();
       } else if (state is AuthStateNeedsVerification) {
         return const EmailVerificationPage();
       } else if (state is AuthStateLoggedOut) {
         return const LoginPage();
-      }
-      else if(state is AuthStateRegistering){
+      } else if (state is AuthStateRegistering) {
         return const SignUpPage();
-      }
-      else if(state is AuthStateForgotPassword){
+      } else if (state is AuthStateForgotPassword) {
         return const ForgotPassword();
-      }
-      else if(state is AuthStateUninitialized) {
+      } else if (state is AuthStateUninitialized) {
         return const ElegantLoadingScreen();
-      }
-      else{
+      } else {
         return const ElegantLoadingScreen();
       }
     });
