@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../Services/chat_page.dart';
+import 'chat_page.dart';
 
 class AllUsersPage extends StatefulWidget {
   const AllUsersPage({super.key});

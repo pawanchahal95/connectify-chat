@@ -13,14 +13,6 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
-        titleTextStyle: theme.textTheme.headlineSmall,
-      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12.0),

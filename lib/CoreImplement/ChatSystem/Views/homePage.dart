@@ -1,4 +1,4 @@
-import 'package:chatapp/CoreImplement/ChatSystem/Services/chat_list_page.dart';
+import 'package:chatapp/CoreImplement/ChatSystem/Views/chat_list_page.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/Views/list_user.dart';
 import 'package:chatapp/CoreImplement/ChatSystem/Views/setting_page.dart';
 import 'package:chatapp/Services/StateManagement/auth_bloc.dart';
